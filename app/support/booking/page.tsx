@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth-db"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
 import { Navigation } from "@/components/navigation"
 import { StudentCard } from "@/components/student-card"
 import { BookingConfirmationDialog } from "@/components/booking-confirmation-dialog"
@@ -90,19 +91,8 @@ export default function SupportBookingPage() {
       })
 
       if (response.ok) {
-        // Update the students state to reflect the booked slot
-        setStudents((prev: any) =>
-          prev.map((student: any) =>
-            student.id === selectedStudent.id
-              ? {
-                  ...student,
-                  availableSlots: student.availableSlots.map((slot: any) =>
-                    slot.id === selectedTimeSlotId ? { ...slot, isBooked: true, bookedBy: user.id } : slot,
-                  ),
-                }
-              : student,
-          ),
-        )
+        // Refresh the data from server to get the most up-to-date state
+        await fetchAvailableStudents()
 
         setShowConfirmDialog(false)
         setSelectedStudent(null)
@@ -113,11 +103,12 @@ export default function SupportBookingPage() {
           `Successfully booked session with ${selectedStudent.name} on ${new Date(timeSlot.date).toLocaleDateString()} at ${timeSlot.startTime}`,
         )
       } else {
-        throw new Error('Failed to create booking')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create booking')
       }
     } catch (error) {
       console.error("Booking failed:", error)
-      alert("Failed to book session. Please try again.")
+      alert(`Failed to book session: ${error instanceof Error ? error.message : 'Please try again.'}`)
     }
   }
 
@@ -136,8 +127,19 @@ export default function SupportBookingPage() {
 
       <div className="max-w-7xl mx-auto p-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Student Booking System</h1>
-          <p className="text-muted-foreground">Schedule consultation sessions with students who need support</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Student Booking System</h1>
+              <p className="text-muted-foreground">Schedule consultation sessions with students who need support</p>
+            </div>
+            <Button
+              onClick={fetchAvailableStudents}
+              disabled={loading}
+              variant="outline"
+            >
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}

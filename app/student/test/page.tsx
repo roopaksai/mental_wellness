@@ -80,18 +80,10 @@ export default function StudentTestPage() {
       })
 
       if (response.ok) {
-        const data = await response.json()
-        // Store result in localStorage for immediate access
-        localStorage.setItem("latestTestResult", JSON.stringify({
-          responses,
-          phq9Score: scores.phq9Score,
-          parsScore: scores.parsScore,
-          completedAt: new Date(),
-          userId: user.id,
-          assessmentId: data.assessment.id
-        }))
-
-        // Redirect to report page
+        // Clear any existing cache to force fresh data fetch
+        localStorage.removeItem("latestTestResult")
+        
+        // Redirect to report page - it will fetch the latest data from API
         router.push("/student/report")
       } else {
         throw new Error('Failed to save assessment')

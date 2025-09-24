@@ -25,7 +25,7 @@ export async function GET() {
         lastAssessment: latestAssessment?.completedAt || null,
         phq9Score: latestAssessment?.phq9Score || 0,
         parsScore: latestAssessment?.parsScore || 0,
-        riskLevel: latestAssessment?.riskLevel || 'low',
+        riskLevel: latestAssessment?.riskLevel || 'low', // Default to low for new students
         totalAssessments
       })
     }

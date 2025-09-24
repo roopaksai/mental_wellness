@@ -35,39 +35,47 @@ export default function StudentReportPage() {
       setIsLoading(false)
     } else {
       // Fetch latest assessment from API
-      fetchLatestAssessment(currentUser.id)
+      fetchLatestAssessment()
     }
   }, []) // Empty dependency array to run only once on mount
 
-  const fetchLatestAssessment = async (userId: string) => {
+  const fetchLatestAssessment = async () => {
     try {
-      const response = await fetch(`/api/assessments?userId=${userId}`)
+      // Always fetch the latest data from API first
+      const response = await fetch(`/api/assessments?userId=${user.id}`)
       if (response.ok) {
         const data = await response.json()
         if (data.assessments && data.assessments.length > 0) {
-          const latestAssessment = data.assessments[0] // Already sorted by completedAt desc
-          setTestResult({
-            phq9Score: latestAssessment.phq9Score,
-            parsScore: latestAssessment.parsScore,
-            completedAt: new Date(latestAssessment.completedAt),
-            userId: latestAssessment.userId,
-            responses: latestAssessment.answers.map((ans: any) => ({
-              questionId: ans.questionId,
-              answer: parseInt(ans.answer),
-              category: ans.questionId.startsWith('phq') ? 'PHQ-9' : 'PARS'
-            }))
-          })
-        } else {
-          router.push("/student/test")
+          const latest = data.assessments[0]
+          const latestResult = {
+            responses: latest.answers || [], // Use answers from API or empty array
+            phq9Score: latest.phq9Score,
+            parsScore: latest.parsScore,
+            completedAt: new Date(latest.completedAt),
+            userId: latest.userId
+          }
+          setTestResult(latestResult)
+          
+          // Update localStorage with the latest data
+          localStorage.setItem("latestTestResult", JSON.stringify({
+            ...latestResult,
+            completedAt: latest.completedAt // Keep as string for localStorage
+          }))
           return
         }
       }
     } catch (error) {
-      console.error('Error fetching assessment:', error)
-      router.push("/student/test")
-      return
-    } finally {
-      setIsLoading(false)
+      console.error('Error fetching latest assessment:', error)
+    }
+    
+    // Fallback to localStorage only if API fails
+    const stored = localStorage.getItem("latestTestResult")
+    if (stored) {
+      const result = JSON.parse(stored)
+      setTestResult({
+        ...result,
+        completedAt: new Date(result.completedAt)
+      })
     }
   }
 

@@ -6,8 +6,9 @@ export async function GET() {
   try {
     await connectToDatabase()
     
-    // Get total students
-    const totalStudents = await User.countDocuments({ role: 'student' })
+    // Get all students
+    const allStudents = await User.find({ role: 'student' }).select('_id')
+    const totalStudents = allStudents.length
     
     // Get all latest assessments for each user
     const latestAssessments = await Assessment.aggregate([
@@ -25,16 +26,23 @@ export async function GET() {
       }
     ])
 
-    // Calculate risk distribution
-    const riskDistribution = latestAssessments.reduce(
-      (acc, assessment) => {
-        acc[assessment.riskLevel]++
-        return acc
-      },
-      { low: 0, moderate: 0, high: 0 }
-    )
+    // Calculate risk distribution including students without assessments
+    const riskDistribution = { low: 0, moderate: 0, high: 0 }
+    const studentsWithAssessments = new Set()
+    
+    latestAssessments.forEach(assessment => {
+      const riskLevel = assessment.riskLevel as 'low' | 'moderate' | 'high'
+      if (riskLevel in riskDistribution) {
+        riskDistribution[riskLevel]++
+      }
+      studentsWithAssessments.add(assessment.userId.toString())
+    })
+    
+    // Students without assessments are considered low risk
+    const studentsWithoutAssessments = totalStudents - studentsWithAssessments.size
+    riskDistribution.low += studentsWithoutAssessments
 
-    // Calculate average scores
+    // Calculate average scores (only for students with assessments)
     let totalPhq9 = 0
     let totalPars = 0
     let assessmentCount = latestAssessments.length
