@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { getCurrentUser, logout } from "@/lib/auth"
+import { getCurrentUser, logout } from "@/lib/auth-db"
 import { LogOut, User } from "lucide-react"
 
 export function Navigation() {

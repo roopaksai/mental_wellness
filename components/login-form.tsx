@@ -8,14 +8,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { authenticateUser, setCurrentUser } from "@/lib/auth"
+import { authenticateUser, registerUser, setCurrentUser } from "@/lib/auth-db"
 import { AlertCircle } from "lucide-react"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [name, setName] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isSignUp, setIsSignUp] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,35 +26,51 @@ export function LoginForm() {
     setError("")
 
     try {
-      const user = authenticateUser(email, password)
-
-      if (user) {
-        setCurrentUser(user)
-
-        // Role-based routing
-        switch (user.role) {
-          case "student":
-            const existingResult = localStorage.getItem("latestTestResult")
-            if (existingResult) {
-              router.push("/student/report")
-            } else {
-              router.push("/student/test")
-            }
-            break
-          case "admin":
-            router.push("/admin/dashboard")
-            break
-          case "support":
-            router.push("/support/booking")
-            break
-          default:
-            setError("Invalid user role")
+      let user
+      
+      if (isSignUp) {
+        // Register new student
+        if (!name.trim()) {
+          setError("Name is required for registration")
+          return
+        }
+        user = await registerUser(email, password, name, 'student')
+        if (!user) {
+          setError("Registration failed. Email may already be in use.")
+          return
         }
       } else {
-        setError("Invalid email or password")
+        // Login existing user
+        user = await authenticateUser(email, password)
+        if (!user) {
+          setError("Invalid email or password")
+          return
+        }
+      }
+
+      setCurrentUser(user)
+
+      // Role-based routing
+      switch (user.role) {
+        case "student":
+          const existingResult = localStorage.getItem("latestTestResult")
+          if (existingResult) {
+            router.push("/student/report")
+          } else {
+            router.push("/student/test")
+          }
+          break
+        case "admin":
+          router.push("/admin/dashboard")
+          break
+        case "support":
+          router.push("/support/booking")
+          break
+        default:
+          setError("Invalid user role")
       }
     } catch (err) {
-      setError("Login failed. Please try again.")
+      setError(isSignUp ? "Registration failed. Please try again." : "Login failed. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -62,10 +80,29 @@ export function LoginForm() {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold">Welcome to MindCare</CardTitle>
-        <CardDescription>Sign in to access your mental health support platform</CardDescription>
+        <CardDescription>
+          {isSignUp 
+            ? "Create your student account to access mental health support" 
+            : "Sign in to access your mental health support platform"
+          }
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {isSignUp && (
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your full name"
+                required
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -98,11 +135,31 @@ export function LoginForm() {
           )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
+            {isLoading 
+              ? (isSignUp ? "Creating Account..." : "Signing in...") 
+              : (isSignUp ? "Create Student Account" : "Sign In")
+            }
           </Button>
         </form>
 
-        <div className="mt-6 text-sm text-muted-foreground">
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              setIsSignUp(!isSignUp)
+              setError("")
+              setName("")
+            }}
+            className="text-sm text-muted-foreground hover:text-primary underline"
+          >
+            {isSignUp 
+              ? "Already have an account? Sign in" 
+              : "New student? Create an account"
+            }
+          </button>
+        </div>
+
+        {/* <div className="mt-6 text-sm text-muted-foreground">
           <p className="font-medium mb-2">Demo Accounts:</p>
           <div className="space-y-1">
             <p>Student: student@test.com</p>
@@ -110,7 +167,7 @@ export function LoginForm() {
             <p>Support: support@test.com</p>
             <p className="text-xs mt-2">Password: password123</p>
           </div>
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   )

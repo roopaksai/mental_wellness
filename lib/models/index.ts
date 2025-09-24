@@ -1,0 +1,11 @@
+// Export all models from a single file
+export { User } from './User'
+export type { IUser } from './User'
+export { Assessment } from './Assessment'
+export type { IAssessment } from './Assessment'
+export { StudentSupport } from './StudentSupport'
+export type { IStudentSupport, ITimeSlot } from './StudentSupport'
+export { Booking } from './Booking'
+export type { IBooking } from './Booking'
+export { ChatMessage } from './ChatMessage'
+export type { IChatMessage } from './ChatMessage'

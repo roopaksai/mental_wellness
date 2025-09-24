@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Navigation } from "@/components/navigation"
 import { QuestionCard } from "@/components/question-card"
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth-db"
 import { mentalHealthQuestions, calculateScores, type TestResponse, type TestResult } from "@/lib/questions"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
@@ -62,21 +62,43 @@ export default function StudentTestPage() {
 
     try {
       const scores = calculateScores(responses)
-      const testResult: TestResult = {
-        responses,
-        phq9Score: scores.phq9Score,
-        parsScore: scores.parsScore,
-        completedAt: new Date(),
-        userId: user.id,
+      
+      // Save assessment to database
+      const response = await fetch('/api/assessments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          answers: responses.map(r => ({
+            questionId: r.questionId,
+            answer: r.answer.toString(),
+            score: r.answer
+          }))
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Store result in localStorage for immediate access
+        localStorage.setItem("latestTestResult", JSON.stringify({
+          responses,
+          phq9Score: scores.phq9Score,
+          parsScore: scores.parsScore,
+          completedAt: new Date(),
+          userId: user.id,
+          assessmentId: data.assessment.id
+        }))
+
+        // Redirect to report page
+        router.push("/student/report")
+      } else {
+        throw new Error('Failed to save assessment')
       }
-
-      // Store result in localStorage for demo
-      localStorage.setItem("latestTestResult", JSON.stringify(testResult))
-
-      // Redirect to report page
-      router.push("/student/report")
     } catch (error) {
       console.error("Error submitting test:", error)
+      alert("Failed to submit assessment. Please try again.")
     } finally {
       setIsSubmitting(false)
     }

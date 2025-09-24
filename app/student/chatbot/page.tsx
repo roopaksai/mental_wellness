@@ -10,7 +10,7 @@ import { Navigation } from "@/components/navigation"
 import { ChatMessageComponent } from "@/components/chat-message"
 import { ChatSuggestions } from "@/components/chat-suggestions"
 import { EmergencyResources } from "@/components/emergency-resources"
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth-db"
 import { chatSuggestions, generateBotResponse, type ChatMessage, type ChatSuggestion } from "@/lib/chatbot"
 import { Send, RotateCcw } from "lucide-react"
 
@@ -29,20 +29,74 @@ export default function StudentChatbotPage() {
       return
     }
 
-    // Initial bot greeting
-    const initialMessage: ChatMessage = {
-      id: "initial",
-      content: `Hello ${user.name}! I'm here to provide mental health support and resources. How are you feeling today?`,
-      sender: "bot",
-      timestamp: new Date(),
-      type: "text",
-    }
-    setMessages([initialMessage])
-  }, [user, router])
+    // Load existing messages or create initial greeting
+    loadChatHistory()
+  }, [router])
 
-  // useEffect(() => {
-  //   scrollToBottom()
-  // }, [messages])
+  const loadChatHistory = async () => {
+    if (!user) return
+
+    try {
+      const response = await fetch(`/api/chat?userId=${user.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.messages && data.messages.length > 0) {
+          setMessages(data.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          })))
+        } else {
+          // Create initial bot greeting
+          const initialMessage: ChatMessage = {
+            id: "initial",
+            content: `Hello ${user.name}! I'm here to provide mental health support and resources. How are you feeling today?`,
+            sender: "bot",
+            timestamp: new Date(),
+            type: "text",
+          }
+          setMessages([initialMessage])
+          // Save initial message to database
+          saveChatMessage(initialMessage)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error)
+      // Fallback to initial greeting
+      const initialMessage: ChatMessage = {
+        id: "initial",
+        content: `Hello ${user.name}! I'm here to provide mental health support and resources. How are you feeling today?`,
+        sender: "bot",
+        timestamp: new Date(),
+        type: "text",
+      }
+      setMessages([initialMessage])
+    }
+  }
+
+  const saveChatMessage = async (message: ChatMessage) => {
+    if (!user) return
+
+    try {
+      await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          content: message.content,
+          sender: message.sender,
+          type: message.type
+        })
+      })
+    } catch (error) {
+      console.error('Error saving chat message:', error)
+    }
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -64,12 +118,33 @@ export default function StudentChatbotPage() {
     setShowSuggestions(false)
     setIsTyping(true)
 
-    // Simulate typing delay
-    setTimeout(() => {
-      const botResponses = generateBotResponse(content)
+    // Save user message
+    await saveChatMessage(userMessage)
+
+    try {
+      // Generate AI response with conversation history
+      const botResponses = await generateBotResponse(content, messages)
       setMessages((prev) => [...prev, ...botResponses])
+      
+      // Save bot responses
+      for (const response of botResponses) {
+        await saveChatMessage(response)
+      }
+    } catch (error) {
+      console.error('Error generating bot response:', error)
+      // Fallback response
+      const fallbackResponse: ChatMessage = {
+        id: `bot-${Date.now()}`,
+        content: "I'm sorry, I'm having trouble responding right now. Please try again or contact our support team if you need immediate assistance.",
+        sender: "bot",
+        timestamp: new Date(),
+        type: "text",
+      }
+      setMessages((prev) => [...prev, fallbackResponse])
+      await saveChatMessage(fallbackResponse)
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
   const handleSuggestionClick = (suggestion: ChatSuggestion) => {

@@ -6,20 +6,55 @@ import { Navigation } from "@/components/navigation"
 import { AnalyticsCharts } from "@/components/analytics-charts"
 import { StudentTable } from "@/components/student-table"
 import { AddAdminDialog } from "@/components/add-admin-dialog"
-import { getCurrentUser } from "@/lib/auth"
-import { mockStudentData, getAnalyticsData } from "@/lib/mock-data"
+import { getCurrentUser } from "@/lib/auth-db"
+// Removed mock data imports - now using API calls
 import { Users, TrendingUp, AlertTriangle, Calendar } from "lucide-react"
 
 export default function AdminDashboardPage() {
-  const [analyticsData, setAnalyticsData] = useState(getAnalyticsData())
+  const [analyticsData, setAnalyticsData] = useState({
+    totalStudents: 0,
+    riskDistribution: { low: 0, moderate: 0, high: 0 },
+    averageScores: { phq9: 0, pars: 0 },
+    recentAssessments: 0
+  })
+  const [studentsData, setStudentsData] = useState([])
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
   const user = getCurrentUser()
 
   useEffect(() => {
     if (!user || user.role !== "admin") {
       router.push("/")
+      return
     }
+
+    fetchData()
   }, [user, router])
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      
+      // Fetch analytics data
+      const analyticsResponse = await fetch('/api/analytics')
+      if (analyticsResponse.ok) {
+        const analytics = await analyticsResponse.json()
+        setAnalyticsData(analytics)
+      }
+
+      // Fetch students data
+      const studentsResponse = await fetch('/api/students')
+      if (studentsResponse.ok) {
+        const students = await studentsResponse.json()
+        setStudentsData(students.students)
+      }
+
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!user) return null
 
@@ -92,7 +127,13 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Student Table */}
-        <StudentTable students={mockStudentData} />
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="text-muted-foreground">Loading...</div>
+          </div>
+        ) : (
+          <StudentTable students={studentsData} />
+        )}
       </div>
     </div>
   )

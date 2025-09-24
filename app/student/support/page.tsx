@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Navigation } from "@/components/navigation"
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth-db"
 import { Users, Heart, MessageCircle, CheckCircle } from "lucide-react"
 
 export default function StudentSupportPage() {
@@ -31,11 +31,8 @@ export default function StudentSupportPage() {
       return
     }
 
-    // Check if already registered
-    const registered = localStorage.getItem(`peerSupport_${currentUser.id}`)
-    if (registered) {
-      setIsRegistered(true)
-    }
+    // Check if already registered via API
+    checkRegistrationStatus(currentUser.id)
 
     // Pre-fill form with user data
     setFormData((prev) => ({
@@ -43,6 +40,18 @@ export default function StudentSupportPage() {
       preferredName: currentUser.name || "",
     }))
   }, [router])
+
+  const checkRegistrationStatus = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/student-support?userId=${userId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setIsRegistered(data.isRegistered)
+      }
+    } catch (error) {
+      console.error('Error checking registration status:', error)
+    }
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -56,20 +65,31 @@ export default function StudentSupportPage() {
 
     setIsLoading(true)
 
-    // Simulate registration process
-    setTimeout(() => {
-      localStorage.setItem(
-        `peerSupport_${user.id}`,
-        JSON.stringify({
-          ...formData,
-          registeredAt: new Date().toISOString(),
-          status: "pending",
-        }),
-      )
+    try {
+      const response = await fetch('/api/student-support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          preferredContactMethod: formData.contactMethod,
+          notes: `Goals: ${formData.supportGoals}\nExperience: ${formData.experience}\nAvailability: ${formData.availability}`
+        })
+      })
 
-      setIsRegistered(true)
+      if (response.ok) {
+        setIsRegistered(true)
+      } else {
+        console.error('Registration failed')
+        alert('Registration failed. Please try again.')
+      }
+    } catch (error) {
+      console.error('Registration error:', error)
+      alert('Registration failed. Please try again.')
+    } finally {
       setIsLoading(false)
-    }, 2000)
+    }
   }
 
   if (!user) {

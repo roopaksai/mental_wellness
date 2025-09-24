@@ -7,7 +7,7 @@ import { Navigation } from "@/components/navigation"
 import { ScoreVisualization } from "@/components/score-visualization"
 import { ActivityRecommendations } from "@/components/activity-recommendations"
 import { MusicRecommendations } from "@/components/music-recommendations"
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth-db"
 import { getScoreInterpretation, type TestResult } from "@/lib/questions"
 import { getPersonalizedActivities, getPersonalizedMusic } from "@/lib/recommendations"
 import { MessageCircle, Users, Calendar, TrendingUp } from "lucide-react"
@@ -28,17 +28,48 @@ export default function StudentReportPage() {
       return
     }
 
-    // Load test result from localStorage
+    // Load test result from localStorage or API
     const savedResult = localStorage.getItem("latestTestResult")
     if (savedResult) {
       setTestResult(JSON.parse(savedResult))
+      setIsLoading(false)
     } else {
+      // Fetch latest assessment from API
+      fetchLatestAssessment(currentUser.id)
+    }
+  }, []) // Empty dependency array to run only once on mount
+
+  const fetchLatestAssessment = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/assessments?userId=${userId}`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.assessments && data.assessments.length > 0) {
+          const latestAssessment = data.assessments[0] // Already sorted by completedAt desc
+          setTestResult({
+            phq9Score: latestAssessment.phq9Score,
+            parsScore: latestAssessment.parsScore,
+            completedAt: new Date(latestAssessment.completedAt),
+            userId: latestAssessment.userId,
+            responses: latestAssessment.answers.map((ans: any) => ({
+              questionId: ans.questionId,
+              answer: parseInt(ans.answer),
+              category: ans.questionId.startsWith('phq') ? 'PHQ-9' : 'PARS'
+            }))
+          })
+        } else {
+          router.push("/student/test")
+          return
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching assessment:', error)
       router.push("/student/test")
       return
+    } finally {
+      setIsLoading(false)
     }
-
-    setIsLoading(false)
-  }, []) // Empty dependency array to run only once on mount
+  }
 
   if (isLoading || !testResult || !user) {
     return (

@@ -7,25 +7,46 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Navigation } from "@/components/navigation"
 import { StudentCard } from "@/components/student-card"
 import { BookingConfirmationDialog } from "@/components/booking-confirmation-dialog"
-import { getCurrentUser } from "@/lib/auth"
-import { mockAvailableStudents, bookTimeSlot, type AvailableStudent } from "@/lib/booking-data"
+import { getCurrentUser } from "@/lib/auth-db"
+// Removed mock data imports - now using API calls
 import { Search, Users, Calendar, AlertTriangle } from "lucide-react"
 
 export default function SupportBookingPage() {
-  const [students, setStudents] = useState(mockAvailableStudents)
+  const [students, setStudents] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [riskFilter, setRiskFilter] = useState<string>("all")
-  const [selectedStudent, setSelectedStudent] = useState<AvailableStudent | null>(null)
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null)
   const [selectedTimeSlotId, setSelectedTimeSlotId] = useState<string | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
   const user = getCurrentUser()
 
   useEffect(() => {
     if (!user || user.role !== "support") {
       router.push("/")
+      return
     }
+    
+    fetchAvailableStudents()
   }, [user, router])
+
+  const fetchAvailableStudents = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/available-students')
+      if (response.ok) {
+        const data = await response.json()
+        setStudents(data.students)
+      } else {
+        console.error('Failed to fetch available students')
+      }
+    } catch (error) {
+      console.error('Error fetching available students:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
@@ -46,34 +67,55 @@ export default function SupportBookingPage() {
     }
   }
 
-  const handleConfirmBooking = (notes: string) => {
+  const handleConfirmBooking = async (notes: string) => {
     if (!selectedStudent || !selectedTimeSlotId || !user) return
 
     try {
-      const booking = bookTimeSlot(selectedStudent.id, selectedTimeSlotId, user.id, notes)
+      const timeSlot = selectedStudent.availableSlots.find((slot: any) => slot.id === selectedTimeSlotId)
+      if (!timeSlot) return
 
-      // Update the students state to reflect the booked slot
-      setStudents((prev) =>
-        prev.map((student) =>
-          student.id === selectedStudent.id
-            ? {
-                ...student,
-                availableSlots: student.availableSlots.map((slot) =>
-                  slot.id === selectedTimeSlotId ? { ...slot, isBooked: true, bookedBy: user.id } : slot,
-                ),
-              }
-            : student,
-        ),
-      )
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentId: selectedStudent.id,
+          supportStaffId: user.id,
+          timeSlotId: selectedTimeSlotId,
+          date: timeSlot.date,
+          startTime: timeSlot.startTime,
+          endTime: timeSlot.endTime,
+          notes
+        })
+      })
 
-      setShowConfirmDialog(false)
-      setSelectedStudent(null)
-      setSelectedTimeSlotId(null)
+      if (response.ok) {
+        // Update the students state to reflect the booked slot
+        setStudents((prev: any) =>
+          prev.map((student: any) =>
+            student.id === selectedStudent.id
+              ? {
+                  ...student,
+                  availableSlots: student.availableSlots.map((slot: any) =>
+                    slot.id === selectedTimeSlotId ? { ...slot, isBooked: true, bookedBy: user.id } : slot,
+                  ),
+                }
+              : student,
+          ),
+        )
 
-      // Show success message
-      alert(
-        `Successfully booked session with ${selectedStudent.name} on ${booking.date.toLocaleDateString()} at ${booking.startTime}`,
-      )
+        setShowConfirmDialog(false)
+        setSelectedStudent(null)
+        setSelectedTimeSlotId(null)
+
+        // Show success message
+        alert(
+          `Successfully booked session with ${selectedStudent.name} on ${new Date(timeSlot.date).toLocaleDateString()} at ${timeSlot.startTime}`,
+        )
+      } else {
+        throw new Error('Failed to create booking')
+      }
     } catch (error) {
       console.error("Booking failed:", error)
       alert("Failed to book session. Please try again.")
@@ -81,7 +123,7 @@ export default function SupportBookingPage() {
   }
 
   const totalAvailableSlots = students.reduce(
-    (total, student) => total + student.availableSlots.filter((slot) => !slot.isBooked).length,
+    (total: number, student: any) => total + student.availableSlots.filter((slot: any) => !slot.isBooked).length,
     0,
   )
 
@@ -167,18 +209,26 @@ export default function SupportBookingPage() {
         </Card>
 
         {/* Student Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredStudents.map((student) => (
-            <StudentCard key={student.id} student={student} onBookSlot={handleBookSlot} />
-          ))}
-        </div>
-
-        {filteredStudents.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No students found</h3>
-            <p className="text-muted-foreground">Try adjusting your search criteria or filters.</p>
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="text-muted-foreground">Loading available students...</div>
           </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredStudents.map((student: any) => (
+                <StudentCard key={student.id} student={student} onBookSlot={handleBookSlot} />
+              ))}
+            </div>
+
+            {filteredStudents.length === 0 && (
+              <div className="text-center py-12">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No students found</h3>
+                <p className="text-muted-foreground">Try adjusting your search criteria or filters.</p>
+              </div>
+            )}
+          </>
         )}
 
         {/* Booking Confirmation Dialog */}
