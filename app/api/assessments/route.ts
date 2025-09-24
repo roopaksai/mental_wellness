@@ -15,15 +15,26 @@ export async function GET(request: NextRequest) {
     
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
+    const limit = searchParams.get('limit')
     
     let query = {}
     if (userId) {
       query = { userId }
     }
 
-    const assessments = await Assessment.find(query)
+    // For single user queries, we usually only need the latest few assessments
+    let assessmentQuery = Assessment.find(query).sort({ completedAt: -1 })
+    
+    if (userId && !limit) {
+      // For individual user reports, limit to 10 most recent assessments for better performance
+      assessmentQuery = assessmentQuery.limit(10)
+    } else if (limit) {
+      assessmentQuery = assessmentQuery.limit(parseInt(limit))
+    }
+
+    const assessments = await assessmentQuery
       .populate('userId', 'name email')
-      .sort({ completedAt: -1 })
+      .lean() // Use lean() for better performance when we don't need full mongoose documents
 
     const formattedAssessments = assessments.map(assessment => ({
       id: assessment._id.toString(),

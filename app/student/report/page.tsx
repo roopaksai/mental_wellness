@@ -17,6 +17,7 @@ export default function StudentReportPage() {
   const [showPeerSupport, setShowPeerSupport] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [loadingMessage, setLoadingMessage] = useState("Loading your report...")
   const router = useRouter()
 
   useEffect(() => {
@@ -28,21 +29,17 @@ export default function StudentReportPage() {
       return
     }
 
-    // Load test result from localStorage or API
-    const savedResult = localStorage.getItem("latestTestResult")
-    if (savedResult) {
-      setTestResult(JSON.parse(savedResult))
-      setIsLoading(false)
-    } else {
-      // Fetch latest assessment from API
-      fetchLatestAssessment()
-    }
+    // Always fetch the latest data from API for most up-to-date results
+    fetchLatestAssessment(currentUser.id)
   }, []) // Empty dependency array to run only once on mount
 
-  const fetchLatestAssessment = async () => {
+  const fetchLatestAssessment = async (userId: string) => {
     try {
-      // Always fetch the latest data from API first
-      const response = await fetch(`/api/assessments?userId=${user.id}`)
+      setIsLoading(true)
+      setLoadingMessage("Fetching your latest assessment...")
+      
+      // Fetch the latest data from API first
+      const response = await fetch(`/api/assessments?userId=${userId}&limit=1`)
       if (response.ok) {
         const data = await response.json()
         if (data.assessments && data.assessments.length > 0) {
@@ -61,30 +58,63 @@ export default function StudentReportPage() {
             ...latestResult,
             completedAt: latest.completedAt // Keep as string for localStorage
           }))
+          setIsLoading(false)
           return
         }
       }
+      
+      // Fallback to localStorage only if API fails or no assessments found
+      const stored = localStorage.getItem("latestTestResult")
+      if (stored) {
+        const result = JSON.parse(stored)
+        setTestResult({
+          ...result,
+          completedAt: new Date(result.completedAt)
+        })
+      }
     } catch (error) {
       console.error('Error fetching latest assessment:', error)
-    }
-    
-    // Fallback to localStorage only if API fails
-    const stored = localStorage.getItem("latestTestResult")
-    if (stored) {
-      const result = JSON.parse(stored)
-      setTestResult({
-        ...result,
-        completedAt: new Date(result.completedAt)
-      })
+      
+      // Fallback to localStorage on error
+      const stored = localStorage.getItem("latestTestResult")
+      if (stored) {
+        const result = JSON.parse(stored)
+        setTestResult({
+          ...result,
+          completedAt: new Date(result.completedAt)
+        })
+      }
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  if (isLoading || !testResult || !user) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Loading your report...</h2>
-          <p className="text-muted-foreground">Please wait while we analyze your results.</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold mb-2">{loadingMessage}</h2>
+          <p className="text-muted-foreground">Please wait a moment...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!testResult) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="max-w-4xl mx-auto p-6">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-semibold mb-4">No Assessment Found</h2>
+            <p className="text-muted-foreground mb-6">
+              You haven't completed any mental health assessments yet.
+            </p>
+            <Button onClick={() => router.push('/student/test')}>
+              Take Assessment
+            </Button>
+          </div>
         </div>
       </div>
     )
