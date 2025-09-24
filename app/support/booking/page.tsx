@@ -29,7 +29,7 @@ export default function SupportBookingPage() {
     }
     
     fetchAvailableStudents()
-  }, [user, router])
+  }, [router])
 
   const fetchAvailableStudents = async () => {
     try {

@@ -7,7 +7,6 @@ import { AnalyticsCharts } from "@/components/analytics-charts"
 import { StudentTable } from "@/components/student-table"
 import { AddAdminDialog } from "@/components/add-admin-dialog"
 import { getCurrentUser } from "@/lib/auth-db"
-// Removed mock data imports - now using API calls
 import { Users, TrendingUp, AlertTriangle, Calendar } from "lucide-react"
 
 export default function AdminDashboardPage() {
