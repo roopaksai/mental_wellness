@@ -70,7 +70,7 @@ export function BookingConfirmationDialog({
           <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">{timeSlot.date.toLocaleDateString()}</span>
+              <span className="font-medium">{new Date(timeSlot.date).toLocaleDateString()}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />

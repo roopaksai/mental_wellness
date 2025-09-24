@@ -29,7 +29,7 @@ export default function AdminDashboardPage() {
     }
 
     fetchData()
-  }, [user, router])
+  }, [router])
 
   const fetchData = async () => {
     try {

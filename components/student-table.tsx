@@ -104,7 +104,11 @@ export function StudentTable({ students }: StudentTableProps) {
                       <div className="text-sm text-muted-foreground">{student.email}</div>
                     </div>
                   </TableCell>
-                  <TableCell>{student.lastAssessment.toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    {student.lastAssessment
+                      ? new Date(student.lastAssessment).toLocaleDateString()
+                      : 'No assessment'}
+                  </TableCell>
                   <TableCell>
                     <span className="font-mono">{student.phq9Score}/18</span>
                   </TableCell>

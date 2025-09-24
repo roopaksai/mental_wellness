@@ -77,7 +77,9 @@ export function StudentCard({ student, onBookSlot }: StudentCardProps) {
         {/* Last Assessment */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          Last assessment: {student.lastAssessment.toLocaleDateString()}
+          Last assessment: {student.lastAssessment
+            ? new Date(student.lastAssessment).toLocaleDateString()
+            : 'No assessment'}
         </div>
 
         {/* Notes */}
@@ -99,7 +101,7 @@ export function StudentCard({ student, onBookSlot }: StudentCardProps) {
               {availableSlots.slice(0, 3).map((slot) => (
                 <div key={slot.id} className="flex items-center justify-between p-2 border border-border rounded">
                   <div className="text-sm">
-                    <div className="font-medium">{slot.date.toLocaleDateString()}</div>
+                    <div className="font-medium">{new Date(slot.date).toLocaleDateString()}</div>
                     <div className="text-muted-foreground">
                       {slot.startTime} - {slot.endTime}
                     </div>
