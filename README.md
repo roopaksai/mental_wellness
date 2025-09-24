@@ -2,13 +2,6 @@
 
 This application has been successfully migrated from mock data to use MongoDB as the database backend.
 
-## Database Setup
-
-The application now uses MongoDB Atlas with the following connection string:
-```
-mongodb+srv://roopak:t7XvZ8fGazx5xeUB@cluster0.lxzxlsb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-```
-
 ## Features Integrated with MongoDB
 
 ### 1. User Authentication

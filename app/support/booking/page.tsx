@@ -1,14 +1,13 @@
 "use client"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { getCurrentUser } from "@/lib/auth-db"
 import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Navigation } from "@/components/navigation"
 import { StudentCard } from "@/components/student-card"
 import { BookingConfirmationDialog } from "@/components/booking-confirmation-dialog"
-import { getCurrentUser } from "@/lib/auth-db"
-// Removed mock data imports - now using API calls
 import { Search, Users, Calendar, AlertTriangle } from "lucide-react"
 
 export default function SupportBookingPage() {
