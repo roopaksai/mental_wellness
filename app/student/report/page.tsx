@@ -90,11 +90,11 @@ export default function StudentReportPage() {
     const totalScore = testResult.phq9Score + testResult.parsScore
 
     if (totalScore < 10) {
-      return "You're doing great! Your mental health appears to be in a good place. Keep up the positive habits and remember that it's normal to have ups and downs."
+      return "You're doing great! Your mental health appears to be in a good place. Keep up the positive habits and remember that it's normal to have ups and downs./ आप बहुत अच्छा कर रहे हैं! आपकी मानसिक सेहत अच्छी स्थिति में प्रतीत होती है। सकारात्मक आदतों को बनाए रखें और याद रखें कि उतार-चढ़ाव होना सामान्य है। "
     } else if (totalScore < 20) {
-      return "You're taking an important step by completing this assessment. While you may be experiencing some challenges, there are many effective ways to improve your wellbeing."
+      return "You're taking an important step by completing this assessment. While you may be experiencing some challenges, there are many effective ways to improve your wellbeing./ आप इस आकलन को पूरा करके एक महत्वपूर्ण कदम उठा रहे हैं। जबकि आप कुछ चुनौतियों का सामना कर सकते हैं, आपकी भलाई में सुधार के लिए कई प्रभावी तरीके हैं।"
     } else {
-      return "Thank you for being honest about your experiences. Remember that seeking help is a sign of strength, and there are people who want to support you on your journey to better mental health."
+      return "Thank you for being honest about your experiences. Remember that seeking help is a sign of strength, and there are people who want to support you on your journey to better mental health./ आपके अनुभवों के बारे में ईमानदार होने के लिए धन्यवाद। याद रखें कि मदद मांगना ताकत का प्रतीक है, और ऐसे लोग हैं जो आपकी बेहतर मानसिक स्वास्थ्य की यात्रा में आपका समर्थन करना चाहते हैं।"
     }
   }
 
