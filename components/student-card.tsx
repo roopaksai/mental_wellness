@@ -90,33 +90,59 @@ export function StudentCard({ student, onBookSlot }: StudentCardProps) {
           </div>
         )}
 
-        {/* Available Slots */}
+        {/* Available Slots or Registration Status */}
         <div>
-          <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Available Slots ({availableSlots.length})
-          </h4>
-          {availableSlots.length > 0 ? (
+          {(student as any).isRegisteredForSupport === false ? (
             <div className="space-y-2">
-              {availableSlots.slice(0, 3).map((slot) => (
-                <div key={slot.id} className="flex items-center justify-between p-2 border border-border rounded">
-                  <div className="text-sm">
-                    <div className="font-medium">{new Date(slot.date).toLocaleDateString()}</div>
-                    <div className="text-muted-foreground">
-                      {slot.startTime} - {slot.endTime}
-                    </div>
-                  </div>
-                  <Button size="sm" onClick={() => onBookSlot(student.id, slot.id)}>
-                    Book
-                  </Button>
-                </div>
-              ))}
-              {availableSlots.length > 3 && (
-                <p className="text-xs text-muted-foreground">+{availableSlots.length - 3} more slots available</p>
-              )}
+              <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-orange-500" />
+                Not Registered for Peer Support
+              </h4>
+              <div className="p-3 bg-orange-50 border border-orange-200 rounded-md">
+                <p className="text-sm text-orange-800 mb-2">
+                  This student has a {student.riskLevel} risk level but hasn't registered for peer support.
+                </p>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    window.open(`mailto:${student.email}?subject=Mental Health Support Available&body=Hi ${student.name},%0A%0AWe noticed you might benefit from our peer support program. Please consider registering for support through our platform.`, '_blank')
+                  }}
+                >
+                  Send Support Email
+                </Button>
+              </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No available slots</p>
+            <div>
+              <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Available Slots ({availableSlots.length})
+              </h4>
+              {availableSlots.length > 0 ? (
+                <div className="space-y-2">
+                  {availableSlots.slice(0, 3).map((slot) => (
+                    <div key={slot.id} className="flex items-center justify-between p-2 border border-border rounded">
+                      <div className="text-sm">
+                        <div className="font-medium">{new Date(slot.date).toLocaleDateString()}</div>
+                        <div className="text-muted-foreground">
+                          {slot.startTime} - {slot.endTime}
+                        </div>
+                      </div>
+                      <Button size="sm" onClick={() => onBookSlot(student.id, slot.id)}>
+                        Book
+                      </Button>
+                    </div>
+                  ))}
+                  {availableSlots.length > 3 && (
+                    <p className="text-xs text-muted-foreground">+{availableSlots.length - 3} more slots available</p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No available slots</p>
+              )}
+            </div>
           )}
         </div>
       </CardContent>

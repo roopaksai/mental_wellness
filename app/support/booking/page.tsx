@@ -19,6 +19,8 @@ export default function SupportBookingPage() {
   const [selectedTimeSlotId, setSelectedTimeSlotId] = useState<string | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [autoRefreshing, setAutoRefreshing] = useState(false)
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const router = useRouter()
   const user = getCurrentUser()
 
@@ -29,22 +31,39 @@ export default function SupportBookingPage() {
     }
     
     fetchAvailableStudents()
+    
+    // Set up auto-refresh every 30 seconds to catch new registrations
+    const interval = setInterval(() => {
+      fetchAvailableStudents(true)
+    }, 30000)
+    
+    return () => clearInterval(interval)
   }, [router])
 
-  const fetchAvailableStudents = async () => {
+  const fetchAvailableStudents = async (isAutoRefresh = false) => {
     try {
-      setLoading(true)
+      if (isAutoRefresh) {
+        setAutoRefreshing(true)
+      } else {
+        setLoading(true)
+      }
+      
       const response = await fetch('/api/available-students')
       if (response.ok) {
         const data = await response.json()
         setStudents(data.students)
+        setLastRefresh(new Date())
       } else {
         console.error('Failed to fetch available students')
       }
     } catch (error) {
       console.error('Error fetching available students:', error)
     } finally {
-      setLoading(false)
+      if (isAutoRefresh) {
+        setAutoRefreshing(false)
+      } else {
+        setLoading(false)
+      }
     }
   }
 
@@ -92,7 +111,7 @@ export default function SupportBookingPage() {
 
       if (response.ok) {
         // Refresh the data from server to get the most up-to-date state
-        await fetchAvailableStudents()
+        await fetchAvailableStudents(false)
 
         setShowConfirmDialog(false)
         setSelectedStudent(null)
@@ -132,13 +151,26 @@ export default function SupportBookingPage() {
               <h1 className="text-3xl font-bold mb-2">Student Booking System</h1>
               <p className="text-muted-foreground">Schedule consultation sessions with students who need support</p>
             </div>
-            <Button
-              onClick={fetchAvailableStudents}
-              disabled={loading}
-              variant="outline"
-            >
-              {loading ? 'Refreshing...' : 'Refresh'}
-            </Button>
+            <div className="flex items-center gap-2">
+              {autoRefreshing && (
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b border-primary"></div>
+                  Auto-refreshing...
+                </div>
+              )}
+              {lastRefresh && !autoRefreshing && (
+                <div className="text-xs text-muted-foreground">
+                  Last updated: {lastRefresh.toLocaleTimeString()}
+                </div>
+              )}
+              <Button
+                onClick={() => fetchAvailableStudents(false)}
+                disabled={loading}
+                variant="outline"
+              >
+                {loading ? 'Refreshing...' : 'Refresh'}
+              </Button>
+            </div>
           </div>
         </div>
 
