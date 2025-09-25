@@ -99,7 +99,9 @@ export default function StudentChatbotPage() {
   }, [messages])
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }, 100)
   }
 
   const handleSendMessage = async (content: string) => {
@@ -179,21 +181,21 @@ export default function StudentChatbotPage() {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      <div className="max-w-6xl mx-auto p-6 pb-8">
-        <div className="grid lg:grid-cols-3 gap-6 min-h-[calc(100vh-200px)]">
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Chat Interface */}
           <div className="lg:col-span-2">
-            <Card className="min-h-[600px] flex flex-col">
-              <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="h-[700px] flex flex-col">
+              <CardHeader className="flex flex-row items-center justify-between flex-shrink-0">
                 <CardTitle>AI Mental Health Support</CardTitle>
                 <Button variant="outline" size="sm" onClick={handleResetChat}>
                   <RotateCcw className="h-4 w-4 mr-2" />
                   Reset Chat
                 </Button>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col p-4">
+              <CardContent className="flex-1 flex flex-col p-4 min-h-0">
                 {/* Messages */}
-                <div className="flex-1 min-h-[450px] max-h-[70vh] overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin">
+                <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin">
                   {messages.map((message) => (
                     <ChatMessageComponent key={message.id} message={message} />
                   ))}
@@ -218,7 +220,7 @@ export default function StudentChatbotPage() {
                 </div>
 
                 {/* Input */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 pt-4 border-t border-border flex-shrink-0">
                   <Input
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
@@ -240,7 +242,7 @@ export default function StudentChatbotPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6 h-fit">
+          <div className="space-y-6">
             {/* Quick Suggestions */}
             {showSuggestions && (
               <ChatSuggestions suggestions={chatSuggestions} onSuggestionClick={handleSuggestionClick} />
