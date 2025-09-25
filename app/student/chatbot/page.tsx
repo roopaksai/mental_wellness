@@ -179,11 +179,11 @@ export default function StudentChatbotPage() {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="grid lg:grid-cols-3 gap-6">
+      <div className="max-w-6xl mx-auto p-6 pb-8">
+        <div className="grid lg:grid-cols-3 gap-6 min-h-[calc(100vh-200px)]">
           {/* Chat Interface */}
           <div className="lg:col-span-2">
-            <Card className="h-[600px] flex flex-col">
+            <Card className="min-h-[600px] flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>AI Mental Health Support</CardTitle>
                 <Button variant="outline" size="sm" onClick={handleResetChat}>
@@ -191,9 +191,9 @@ export default function StudentChatbotPage() {
                   Reset Chat
                 </Button>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col">
+              <CardContent className="flex-1 flex flex-col p-4">
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
+                <div className="flex-1 min-h-[450px] max-h-[70vh] overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin">
                   {messages.map((message) => (
                     <ChatMessageComponent key={message.id} message={message} />
                   ))}
@@ -240,7 +240,7 @@ export default function StudentChatbotPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 h-fit">
             {/* Quick Suggestions */}
             {showSuggestions && (
               <ChatSuggestions suggestions={chatSuggestions} onSuggestionClick={handleSuggestionClick} />
