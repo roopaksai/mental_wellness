@@ -70,10 +70,8 @@ You don't have to go through this alone. There are people who want to help you r
     ]
 
     const completion = await openai.chat.completions.create({
-      model: "x-ai/grok-4-fast:free",
+      model: "amazon/nova-2-lite-v1:free",
       messages: messages,
-      max_tokens: 300,
-      temperature: 0.7,
     })
 
     const aiResponse = completion.choices[0]?.message?.content || 

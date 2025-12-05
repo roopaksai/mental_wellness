@@ -2,7 +2,7 @@ import { MongoClient, Db } from 'mongodb'
 import mongoose from 'mongoose'
 
 // MongoDB connection string
-const MONGODB_URI = 'mongodb+srv://roopak:t7XvZ8fGazx5xeUB@cluster0.lxzxlsb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+const MONGODB_URI = 'mongodb+srv://roopak:hyMA38xFNjtIc9IB@cluster0.lxzxlsb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
 
 if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable inside .env.local')
