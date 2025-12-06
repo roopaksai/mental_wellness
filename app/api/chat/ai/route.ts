@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Check for crisis keywords first for immediate response
     const crisisKeywords = ['suicide', 'kill myself', 'end it all', 'self-harm', 'hurt myself', 'don\'t want to live']
     const isCrisis = crisisKeywords.some(keyword => message.toLowerCase().includes(keyword))
-    
+
     if (isCrisis) {
       return NextResponse.json({
         response: `I'm very concerned about you and want to make sure you get immediate help. Please reach out to these crisis resources right now:
@@ -74,14 +74,14 @@ You don't have to go through this alone. There are people who want to help you r
       messages: messages,
     })
 
-    const aiResponse = completion.choices[0]?.message?.content || 
+    const aiResponse = completion.choices[0]?.message?.content ||
       "I'm here to support you. Could you tell me more about what you're experiencing?"
 
     return NextResponse.json({ response: aiResponse })
 
   } catch (error) {
     console.error('Error generating AI response:', error)
-    
+
     // Return fallback response if AI fails
     return NextResponse.json({
       response: "I'm here to support you, though I'm having some technical difficulties right now. Your feelings are valid, and I want you to know that you're not alone. If you need immediate support, please consider reaching out to our campus counseling center at (555) 123-4567 or the National Suicide Prevention Lifeline at 988."

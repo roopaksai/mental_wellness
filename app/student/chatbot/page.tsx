@@ -55,8 +55,6 @@ export default function StudentChatbotPage() {
             type: "text",
           }
           setMessages([initialMessage])
-          // Save initial message to database
-          saveChatMessage(initialMessage)
         }
       }
     } catch (error) {
@@ -123,9 +121,11 @@ export default function StudentChatbotPage() {
     // Save user message
     await saveChatMessage(userMessage)
 
+    const payload_messages = messages.filter(msg => msg.id !== 'initial');
+
     try {
       // Generate AI response with conversation history
-      const botResponses = await generateBotResponse(content, messages)
+      const botResponses = await generateBotResponse(content, payload_messages)
       setMessages((prev) => [...prev, ...botResponses])
       
       // Save bot responses
@@ -164,7 +164,7 @@ export default function StudentChatbotPage() {
     if (!user) return
 
     const initialMessage: ChatMessage = {
-      id: "reset",
+      id: "initial",
       content: `Hello ${user.name}! I'm here to provide mental health support and resources. How are you feeling today?`,
       sender: "bot",
       timestamp: new Date(),
