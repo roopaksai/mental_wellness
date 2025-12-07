@@ -66,5 +66,5 @@ export async function connectToDatabase() {
 
 export async function getDatabase(): Promise<Db> {
   const client = await clientPromise
-  return client.db('mental_wellness')
+  return client.db('test')
 }
