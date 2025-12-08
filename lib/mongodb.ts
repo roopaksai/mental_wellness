@@ -1,8 +1,8 @@
 import { MongoClient, Db } from 'mongodb'
 import mongoose from 'mongoose'
 
-// MongoDB connection string
-const MONGODB_URI = 'mongodb+srv://roopak:hyMA38xFNjtIc9IB@cluster0.lxzxlsb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+// MongoDB connection string from environment variable
+const MONGODB_URI = process.env.MONGODB_URI || ''
 
 if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable inside .env.local')
@@ -66,5 +66,5 @@ export async function connectToDatabase() {
 
 export async function getDatabase(): Promise<Db> {
   const client = await clientPromise
-  return client.db('mental_wellness')
+  return client.db('test')
 }
