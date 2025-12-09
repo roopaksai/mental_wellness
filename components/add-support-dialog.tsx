@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { UserPlus } from "lucide-react"
 
-export function AddAdminDialog() {
+export function AddSupportDialog() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -39,22 +39,22 @@ export function AddAdminDialog() {
           name,
           email,
           password,
-          role: 'admin'
+          role: 'support'
         })
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to add admin')
+        throw new Error(data.error || 'Failed to add support staff')
       }
 
-      alert(`Admin ${name} (${email}) has been added successfully!`)
+      alert(`Support staff ${name} (${email}) has been added successfully!`)
       setName("")
       setEmail("")
       setPassword("")
       setOpen(false)
-      window.location.reload() // Refresh to show new admin
+      window.location.reload() // Refresh to show new support staff
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -65,15 +65,15 @@ export function AddAdminDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button variant="outline">
           <UserPlus className="h-4 w-4 mr-2" />
-          Add Admin
+          Add Support Staff
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Admin</DialogTitle>
-          <DialogDescription>Add a new administrator to the mental health support platform.</DialogDescription>
+          <DialogTitle>Add New Support Staff</DialogTitle>
+          <DialogDescription>Add a new support team member to the mental health support platform.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
@@ -83,34 +83,34 @@ export function AddAdminDialog() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="admin-name">Full Name</Label>
+              <Label htmlFor="support-name">Full Name</Label>
               <Input
-                id="admin-name"
+                id="support-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter admin's full name"
+                placeholder="Enter support staff's full name"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="admin-email">Email Address</Label>
+              <Label htmlFor="support-email">Email Address</Label>
               <Input
-                id="admin-email"
+                id="support-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter admin's email"
+                placeholder="Enter support staff's email"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="admin-password">Password</Label>
+              <Label htmlFor="support-password">Password</Label>
               <Input
-                id="admin-password"
+                id="support-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin's password"
+                placeholder="Enter support staff's password"
                 required
                 minLength={6}
               />
@@ -121,7 +121,7 @@ export function AddAdminDialog() {
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Adding..." : "Add Admin"}
+              {isLoading ? "Adding..." : "Add Support Staff"}
             </Button>
           </DialogFooter>
         </form>

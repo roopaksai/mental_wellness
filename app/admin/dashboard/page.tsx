@@ -6,6 +6,7 @@ import { Navigation } from "@/components/navigation"
 import { AnalyticsCharts } from "@/components/analytics-charts"
 import { StudentTable } from "@/components/student-table"
 import { AddAdminDialog } from "@/components/add-admin-dialog"
+import { AddSupportDialog } from "@/components/add-support-dialog"
 import { getCurrentUser } from "@/lib/auth-db"
 import { Users, TrendingUp, AlertTriangle, Calendar } from "lucide-react"
 
@@ -67,7 +68,10 @@ export default function AdminDashboardPage() {
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
             <p className="text-muted-foreground">Monitor student mental health and manage the platform</p>
           </div>
-          <AddAdminDialog />
+          <div className="flex gap-2">
+            <AddSupportDialog />
+            <AddAdminDialog />
+          </div>
         </div>
 
         {/* Key Metrics */}

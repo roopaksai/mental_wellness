@@ -50,24 +50,20 @@ export function LoginForm() {
 
       setCurrentUser(user)
 
-      // Role-based routing
-      switch (user.role) {
-        case "student":
-          const existingResult = localStorage.getItem("latestTestResult")
-          if (existingResult) {
-            router.push("/student/report")
-          } else {
-            router.push("/student/test")
-          }
-          break
-        case "admin":
-          router.push("/admin/dashboard")
-          break
-        case "support":
-          router.push("/support/booking")
-          break
-        default:
-          setError("Invalid user role")
+      // Route based on user role
+      if (user.role === 'admin') {
+        router.push("/admin/dashboard")
+      } else if (user.role === 'support') {
+        router.push("/support/booking")
+      } else if (user.role === 'student') {
+        const existingResult = localStorage.getItem("latestTestResult")
+        if (existingResult) {
+          router.push("/student/report")
+        } else {
+          router.push("/student/test")
+        }
+      } else {
+        setError("Invalid user role")
       }
     } catch (err) {
       setError(isSignUp ? "Registration failed. Please try again." : "Login failed. Please try again.")
